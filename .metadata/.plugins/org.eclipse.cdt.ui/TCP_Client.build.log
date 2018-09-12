@@ -1,0 +1,6 @@
+10:20:52 **** Incremental Build of configuration Debug for project TCP_Client ****
+make all 
+make: Nothing to be done for 'all'.
+
+10:20:53 Build Finished (took 347ms)
+

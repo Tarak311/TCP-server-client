@@ -1,0 +1,162 @@
+
+#include <stdio.h> // standard input and output library
+#include <stdlib.h> // this includes functions regarding memory allocation
+#include <string.h> // contains string functions
+#include <errno.h> //It defines macros for reporting and retrieving error conditions through error codes
+#include <time.h> //contains various functions for manipulating date and time
+#include <unistd.h> //contains various constants
+#include <sys/types.h> //contains a number of basic derived types that should be used whenever appropriate
+#include <arpa/inet.h> // defines in_addr structure
+#include <sys/socket.h> // for socket creation
+#include <netinet/in.h> //contains constants and structures needed for internet domain addresses
+#include <sys/select.h>
+#include <fstream>
+#include <fcntl.h>
+#include <iostream>
+
+
+int readBytes;
+
+
+uint8_t scratchpad[18]={0x55,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+uint8_t cmd=0x00;
+struct status {
+	uint8_t gpio11;
+	uint8_t gpio12;
+	uint8_t rgb;
+	uint8_t max_temp1;
+	uint8_t max_temp2;
+};
+
+
+struct scratchpad {
+	uint8_t temp0;
+	uint8_t temp1;
+	uint8_t temphigh;
+	uint8_t templow;
+	uint8_t configuration;
+	uint8_t crc;
+	struct status state;
+};
+/*STATUS: gpio: BYTE [7]: status(0x05 is by user,0x07 due to temp logic BYTE[0-6]:reason*/
+
+using namespace std;
+
+int printscratchpad(struct scratchpad& scrth);
+struct status checkcmd(uint8_t &cmd);
+int main()
+{
+
+	int i,server_socket = 0, server_socket1 = 0,clientfd = 0,clientfd1 =0 ;
+
+	struct sockaddr_in server_address,server_address1 ;
+	struct  scratchpad scratch,scratch2;
+
+
+	server_socket = socket(AF_INET, SOCK_STREAM, 0); // creating socket
+	server_socket1 = socket(AF_INET, SOCK_STREAM, 0);
+	memset(&server_address, '0', sizeof(server_address));
+	memset(&server_address1, '0', sizeof(server_address1));
+	memset(scratchpad, '0', sizeof(scratchpad));
+	server_address.sin_family = AF_INET;
+	server_address.sin_addr.s_addr = htonl(INADDR_ANY);
+	server_address.sin_port = htons(2017);         // this is the port number of running server
+	server_address1.sin_family = AF_INET;
+	server_address1.sin_addr.s_addr = htonl(INADDR_ANY);
+	server_address1.sin_port = htons(2018);         // this is the port number of running server
+
+	bind(server_socket, (struct sockaddr*)&server_address , sizeof(server_address));
+	listen(server_socket , 20);
+	bind(server_socket1, (struct sockaddr*)&server_address1 , sizeof(server_address1));
+	listen(server_socket1 , 20);
+	while(1)
+	{
+
+
+		if(fork()==0)
+		{
+			while(1)
+			{
+				clientfd = accept(server_socket, (struct sockaddr*)NULL, NULL);
+				cout<<"PID1:Some client requested data"<<endl;
+				recv(clientfd, &cmd, sizeof(cmd),0);
+				//scratch.state=checkcmd(cmd);
+				write(clientfd, scratchpad, sizeof(scratchpad));
+				sleep(1);
+
+			}
+			close(clientfd);
+		}
+		else
+		{
+			while(1)
+			{
+				clientfd1 = accept(server_socket1, (struct sockaddr*)NULL, NULL);
+				cout<<"PID2:Some client sent data"<<endl;
+				recv(clientfd1, scratchpad, sizeof(scratchpad),0);
+			//	scratch.state=checkcmd(cmd);
+				write(clientfd1, &cmd, sizeof(cmd));
+				sleep(1);
+
+			}
+			close(clientfd1);
+		}
+	}
+	close(clientfd);
+	return 0;
+}
+
+int printscratchpad(struct scratchpad& sc)
+
+{
+	uint8_t temp_dec = (sc.temp1&&0xFF)>>4||(sc.temp0&&0xFF)<<4;
+	float temp_frac = sc.temp1&0x0F;
+	double temperature = temp_dec +temp_frac;
+	cout<<temp_dec<<endl;
+	printf(" ---------------------------\n");
+	printf("|  DS1482 scratchpad values: |\n");
+	printf(" ---------------------------\n");
+	printf("|temperature is:      | %02x |\n",sc.temp0 );
+	printf(" ---------------------------\n");
+	printf("|temperature is:      | %02x |\n",sc.temp1 );
+	printf(" ---------------------------\n");
+	printf("|High temp reg	      | %02x |\n",sc.temphigh );
+	printf(" ---------------------------\n");
+	printf("|Low temp reg	      | %02x |\n",sc.templow );
+	printf(" ---------------------------\n");
+	printf("|Config register      | %02x |\n",sc.configuration );
+	printf(" ---------------------------\n");
+	printf("|reserved register    | %02x |\n",scratchpad[5] );
+	printf(" ---------------------------\n");
+	printf("|reserved register    | %02x |\n",scratchpad[6] );
+	printf(" ---------------------------\n");
+	printf("|reserved register    | %02x |\n",scratchpad[7] );
+	printf(" ---------------------------\n");
+	printf("|CRC:                 | %02x |\n",sc.crc );
+	printf(" ---------------------------\n");
+	return 0;
+}
+struct status checkcmd(uint8_t &cmd){
+	struct status st;
+	switch(cmd){
+	case 0x44:
+		cout<<"Setting Pin 11 high(off)"<<endl;
+		break;
+	case 0x45:
+		cout<<"Setting Pin 12 high(off)"<<endl;
+		break;
+	case 0x46:
+		cout<<"Setting ALL pin high(off)"<<endl;
+		break;
+	case 0x54:
+		cout<<"Setting Pin 11 low(on)"<<endl;
+		break;
+	case 0x55:
+		cout<<"Setting Pin 12 low(on)"<<endl;
+		break;
+	case 0x56:
+		cout<<"Setting ALL Pin low(on)"<<endl;
+		break;
+	}
+	return st;
+}

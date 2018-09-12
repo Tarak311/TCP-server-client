@@ -1,0 +1,14 @@
+01:16:16 **** Build of configuration Debug for project Tarak ****
+make all 
+Building file: ../src/Tarak.cpp
+Invoking: Cross G++ Compiler
+arm-poky-linux-gnueabi-g++ -I/opt/poky/2.5/sysroots/x86_64-pokysdk-linux/lib -O0 -g3 -Wall -c -fmessage-length=0 -MMD -MP -MF"src/Tarak.d" -MT"src/Tarak.o" -o "src/Tarak.o" "../src/Tarak.cpp"
+../src/Tarak.cpp:9:10: fatal error: iostream.h: No such file or directory
+ #include <iostream.h>
+src/subdir.mk:18: recipe for target 'src/Tarak.o' failed
+          ^~~~~~~~~~~~
+compilation terminated.
+make: *** [src/Tarak.o] Error 1
+
+01:16:16 Build Finished (took 74ms)
+

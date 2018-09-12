@@ -1,0 +1,15 @@
+10:20:54 **** Incremental Build of configuration Debug for project i2c_client ****
+make all 
+Building file: ../src/i2c_client.cpp
+Invoking: GCC C++ Compiler
+g++ -O0 -g3 -Wall -c -fmessage-length=0 -MMD -MP -MF"src/i2c_client.d" -MT"src/i2c_client.o" -o "src/i2c_client.o" "../src/i2c_client.cpp"
+Finished building: ../src/i2c_client.cpp
+ 
+Building target: i2c_client
+Invoking: GCC C++ Linker
+g++  -o "i2c_client"  ./src/i2c_client.o   
+Finished building target: i2c_client
+ 
+
+10:20:57 Build Finished (took 3s.480ms)
+

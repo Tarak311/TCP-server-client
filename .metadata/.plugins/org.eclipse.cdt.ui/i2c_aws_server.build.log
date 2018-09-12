@@ -1,0 +1,6 @@
+10:20:54 **** Incremental Build of configuration Debug for project i2c_aws_server ****
+make all 
+make: Nothing to be done for 'all'.
+
+10:20:54 Build Finished (took 113ms)
+
